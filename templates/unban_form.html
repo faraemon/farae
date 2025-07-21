@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Manual Unban</title>
+    <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+
+    <h3>Banned IPs:</h3>
+    <table border="2" cellspacing="0" cellpadding="10">
+        <tr>
+            <th>IP</th>
+            <th>Strikes</th>
+            <th>Cooldown Until</th>
+        </tr>
+        {% for ban in banlist %}
+        <tr>
+            <td>{{ ban.ip }}</td>
+            <td>{{ ban.strikes }}</td>
+            <td>{{ ban.cooldown }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <h2>Manual Unban</h2>
+    <form method="POST" action="/unban">
+        <input type="text" name="ip" placeholder="IP to unban" required><br>
+        <input type="password" name="password" placeholder="Enter your {{ password_index + 1 }}{{ suffix }} password." required><br>
+        <button type="submit">Unban this IP</button>
+    </form>
+
+</body>
+</html>

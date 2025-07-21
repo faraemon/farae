@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>You've been banned...</title>
+    <link rel="stylesheet" href="/static/css/style.css" />
+    <style>
+        .banleft {
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <h1>Faraevun blocked you? Here's what you need to know.</h1>
+    <p>So here's the thing. You spammed "429" requests. You may have accessed a "403" or something. Maybe "404's" aren't your lucky day. Either way, the entire server freaked out and banned you. They ban you for a few minutes to start off and it goes up to 1,168 years...</p><br>
+    <p>No, <strong>we are not kidding.</strong> If you push it hard enough, you <strong>can get banned</strong> for that long.</p><br>
+    <p>So the best thing you can do right now is wait, or if you have served your appeal long enough, it should be good after a while.</p><br><br>
+    <p>This is not a ban as in "forever." This is a ban as in "take a break and move on with your day." You probably have other things you need to do. Go do those things and, hey: by the time you get back you'll be able to do this again!</p>
+    <p class="ban-timer">
+        You're still banned for <span id="ban-time"></span>. Reloading this tab a lot makes this go up FAST.
+    </p>
+    <script>
+        // Set time remaining (in seconds) passed from Flask
+        let remaining = {{ bantime_remaining|safe }};
+
+        function formatTime(seconds) {
+            if (seconds <= 0) return "0 seconds";
+
+            const d = Math.floor(seconds / (3600 * 24));
+            seconds %= (3600 * 24);
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            const s = seconds % 60;
+
+            let out = [];
+            if (d > 0) out.push(`${d}d`);
+            if (h > 0) out.push(`${h}h`);
+            if (m > 0) out.push(`${m}m`);
+            if (s > 0 || out.length === 0) out.push(`${s}s`);
+
+            return out.join(" ");
+        }
+
+        function updateCountdown() {
+            const el = document.getElementById("ban-time");
+            el.textContent = formatTime(remaining);
+            if (remaining > 0) {
+                remaining--;
+            } else {
+                clearInterval(interval);
+                el.textContent = "a brief moment. Try refreshing!";
+            }
+        }
+
+        // Initial render
+        updateCountdown();
+        const interval = setInterval(updateCountdown, 1000);
+    </script>
+    <p>
+        <a href="http://prem-eu3.bot-hosting.net:21095/appeal" style="color: #5af;" rel="noreferrer">Click here to appeal your ban</a>. If it's over 48 hours, we'll definately take a look at it for you. Just don't spam it.
+    </p>
+</body>
+</html>

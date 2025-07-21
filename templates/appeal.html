@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Appeal Your Ban</title>
+    <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+    <h2>Appeal your ban</h2>
+    <form action="/appeal" method="post">
+        <label for="text">Why should we unban you? Please note we have to take into consideration how LONG you've been banned as well; for example, it's much harder to appeal a ban when you've only been in it 20% of the way versus if you have already dealt with half of your ban already.</label><br><br>
+        <textarea name="text" rows="5" cols="50" placeholder="I am vewy sowwy and I won't do it again. My IP is 127.0.0.1:0069"></textarea><br><br>
+        <input type="submit" value="Submit Appeal">
+    </form>
+    <p>Your IP is {{ ip }}. Please include this in your ban appeal or else we may not see it immediately.</p>
+</body>
+</html>

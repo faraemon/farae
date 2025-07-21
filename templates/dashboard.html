@@ -1,0 +1,164 @@
+<!-- templates/dashboard.html -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Server Dashboard</title>
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+<body>
+  <h1>Hi :D</h1>
+
+  {% with messages = get_flashed_messages() %}
+    {% if messages %}
+      <div id="flash-messages" style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+        background: #550000; color: #fdd; padding: 12px 24px; border-radius: 10px;
+        font-family: 'M1Mid', monospace; z-index: 9999;">
+        {% for message in messages %}
+          <p>{{ message }}</p>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <p>IP: {{ ip }}</p>
+  <p>Tokens left: {{ tokens_left }}/64</p>
+  <p>Cooldown ends: {{ cooldown_time }}</p>
+
+  {% if is_admin %}
+    <h2>Admin Panel</h2>
+
+    <div class="stat-toggle" onclick="toggleDropdown('users-dropdown')">
+      Total users: {{ total_users }} <span class="arrow">▼</span>
+    </div>
+        <div id="users-dropdown" class="dropdown hidden">
+          <ul>
+            {% for ip, data in ip_strikes.items() %}
+              {% set tokens_left = 64 - data.strikes %}
+              <li>
+            <strong>{{ ip }}</strong> — {{ tokens_left }}/64 tokens
+        <form method="POST" action="/ban" style="display:inline; margin-left: 10px;">
+          <input type="hidden" name="ip" value="{{ ip }}">
+          <input type="password" name="password"
+            placeholder="Enter your {{ (password_index or 0) + 1 }}{{ ['st', 'nd', 'rd', 'th'][(password_index or 0) if (password_index or 0) < 4 else 4] }} password"
+            required>
+          <button type="submit">Ban</button>
+        </form>
+      </li>
+    {% endfor %}
+  </ul>
+</div>
+    <div class="stat-toggle" onclick="toggleDropdown('banned-dropdown')">
+      Banned users: {{ banned_count }} <span class="arrow">▼</span>
+    </div>
+    <div id="banned-dropdown" class="dropdown hidden">
+      <ul>
+        {% for ban in banlist %}
+          {% set strikes_ceil = ban.strikes|round(0, 'ceil') %}
+          <li>
+            {{ ban.ip }} — {{ strikes_ceil }}/64 strikes
+            <form method="POST" action="/ban" style="display:inline; margin-left: 10px;">
+              <input type="hidden" name="ip" value="{{ ban.ip }}">
+              <input type="password" name="password"
+                placeholder="Enter your {{ (password_index or 0) + 1 }}{{ ['st', 'nd', 'rd', 'th'][(password_index or 0) if (password_index or 0) < 4 else 4] }} password"
+                required>
+              <button type="submit">Ban</button>
+            </form>
+          </li>
+        {% endfor %}
+      </ul>
+    </div>
+
+    <h3>Banned IPs:</h3>
+    <table border="2" cellspacing="0" cellpadding="10" style="margin:auto; color:#f55;">
+      <tr>
+        <th>IP</th>
+        <th>Strikes</th>
+        <th>Cooldown Until</th>
+        <th>Unban</th>
+        <th>Delete Appeal</th>
+      </tr>
+      {% for ban in banlist %}
+        <tr>
+          <td>{{ ban.ip }}</td>
+          <td>{{ ban.strikes }}</td>
+          <td>{{ ban.cooldown }}</td>
+          <td>
+            <form method="POST" action="/unban" style="display:inline;">
+              <input type="hidden" name="ip" value="{{ ban.ip }}">
+              <input type="password" name="password"
+                placeholder="Enter your {{ (password_index or 0) + 1 }}{{ ['st', 'nd', 'rd', 'th'][(password_index or 0) if (password_index or 0) < 4 else 4] }} password"
+                required>
+              <button type="submit">Unban this IP</button>
+            </form>
+          </td>
+          <td>
+            <form method="POST" action="/delete_appeal" style="display:inline;">
+              <input type="hidden" name="ip" value="{{ ban.ip }}">
+              <input type="password" name="password"
+                placeholder="Enter your {{ (password_index or 0) + 1 }}{{ ['st', 'nd', 'rd', 'th'][(password_index or 0) if (password_index or 0) < 4 else 4] }} password"
+                required>
+              <button type="submit">Delete Appeal</button>
+            </form>
+          </td>
+        </tr>
+      {% endfor %}
+    </table>
+
+    <h3>Recent Appeals</h3>
+    <table border="2" cellspacing="0" cellpadding="10" style="margin:auto; color:#f55;">
+      <tr>
+        <th>Time</th>
+        <th>IP</th>
+        <th>Appeal</th>
+        <th>Delete</th>
+      </tr>
+      {% for appeal in appeals_log|reverse %}
+        <tr>
+          <td>{{ appeal.time }}</td>
+          <td>{{ appeal.ip }}</td>
+          <td style="max-width:400px; word-wrap:break-word;">{{ appeal.text }}</td>
+          <td>
+            <form method="POST" action="/delete_appeal_by_index" style="display:inline;">
+              <input type="hidden" name="index" value="{{ loop.revindex0 }}">
+              <input type="password" name="password"
+                placeholder="Enter your {{ (password_index or 0) + 1 }}{{ ['st', 'nd', 'rd', 'th'][(password_index or 0) if (password_index or 0) < 4 else 4] }} password"
+                required>
+              <button type="submit">Delete</button>
+            </form>
+          </td>
+        </tr>
+      {% endfor %}
+    </table>
+  {% endif %}
+
+  <script>
+    function toggleDropdown(id) {
+      const dropdown = document.getElementById(id);
+      dropdown.classList.toggle("show");
+      dropdown.classList.toggle("hidden");
+
+      const arrow = dropdown.previousElementSibling.querySelector(".arrow");
+      arrow.classList.toggle("rotated");
+    }
+
+    window.onload = () => {
+      const flash = document.getElementById("flash-messages");
+      if (!flash) return;
+
+      if (performance.getEntriesByType("navigation")[0].type === "back_forward") {
+        flash.style.display = "none";
+        return;
+      }
+
+      setTimeout(() => {
+        flash.style.transition = "opacity 1s ease";
+        flash.style.opacity = "0";
+      }, 4000);
+
+      setTimeout(() => {
+        if (flash.parentNode) flash.parentNode.removeChild(flash);
+      }, 5000);
+    };
+  </script>
+</body>
+</html>
