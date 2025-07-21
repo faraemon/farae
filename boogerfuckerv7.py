@@ -94,7 +94,7 @@ def add_strike(ip, points):
     decay_strikes(ip)
     user = ip_strikes[ip]
     user["strikes"] += points
-    cooldown_quadrants = user["strikes"] - 64
+    cooldown_quadrants = user["strikes"] - 128
     cooldown_remaining = max(0, int((user.get("cooldown_until", 0) - now) / 60))
     cooldown_until = user.get("cooldown_until", 0)
     cooldown_remaining_seconds = max(0, int(cooldown_until - now))
@@ -148,7 +148,7 @@ def is_throttled(ip):
         user["strikes"] = min(int(prev * 1.15) + 5, MAX_STRIKES)
         save_bannage()
         raise Forced404
-    if user["strikes"] >= 64 and user.get("cooldown_until", 0) > now:
+    if user["strikes"] >= 128 and user.get("cooldown_until", 0) > now:
         remaining = int((user["cooldown_until"] - now) / 60) + 1
         return True, remaining
     return False, 0
@@ -194,11 +194,11 @@ def validate_radius(radius_miles, ip):
             "error": "PXF3",
             "message": "You are asking for too little, and this counts as trying to DDoS. If you saw this in the app directly, that's a BIG error and needs to be addressed ASAP."
         }, 429
-    if radius_miles > 40:
+    if radius_miles > 64:
         add_strike(ip, 4)
         return {
             "error": "P907",
-            "message": "You're asking for too much. Please lower the radius to 40 miles or less. Note you can always ping more times if needed."
+            "message": "You're asking for too much. Please lower the radius to 64 miles or less. Note you can always ping more times if needed."
         }, 429
     return None, None
 
@@ -308,7 +308,7 @@ def dashboard():
 
     user = ip_strikes.get(ip, {})
     strikes = user.get("strikes", 0)
-    tokens_left = max(0, 64 - strikes)
+    tokens_left = max(0, 128 - strikes)
     cooldown_time = datetime.fromtimestamp(user.get("cooldown_until", 0)).strftime("%Y-%m-%d %H:%M:%S")
     cooldown_until = user.get("cooldown_until", 0)
     now = time.time()
@@ -522,7 +522,7 @@ def check():
             focus_level = 0  # fallback to default
 
         # Clamp between 0 and 4
-        focus_level = max(0, min(4, focus_level))
+        focus_level = max(0, min(5, focus_level))
 
         # Map focus level to step size
         focus_step_map = {
@@ -530,16 +530,17 @@ def check():
             1: 0.016,
             2: 0.010,
             3: 0.007,
-            4: 0.0055
+            4: 0.0047,
+            5: 0.0033
         }
 
         step = focus_step_map[focus_level]
 
         # Optional: increase token cost for higher focus levels
-        token_multiplier = 1.0 + focus_level * 0.15  # e.g. 1.0, 1.15, 1.3, etc.
+        token_multiplier = 1.0 + focus_level * 0.2  # e.g. 1.0, 1.15, 1.3, etc.
 
-        tiles_per_token = 425
-        max_tokens = 64 + 16 + admin_bonus
+        tiles_per_token = 525
+        max_tokens = 128 + 256 + admin_bonus
         tokens_available = max_tokens - user.get("strikes", 0)
 
         def estimate_tile_count(radius_miles, step):
@@ -582,7 +583,7 @@ def check():
 
         encoded = encode_runs(result_bits)
         user = ip_strikes.get(ip, {})
-        tokens_left = round(max(0, 64 - user.get("strikes", 0)), 2)
+        tokens_left = round(max(0, 128 - user.get("strikes", 0)), 2)
 
         accept = request.headers.get("Accept", "").lower()
         ua = request.headers.get("User-Agent", "").lower()
@@ -595,7 +596,7 @@ def check():
                 f"Tiles checked: {checked_tiles}\n"
                 f"Radius used: {radius_miles} miles\n"
                 f"Tokens used: {token_cost}\n"
-                f"Tokens left: {tokens_left}/64\n"
+                f"Tokens left: {tokens_left}/128\n"
                 f"(1 token regenerates every ~15 minutes.)"
             ), 200, {'Content-Type': 'text/plain; charset=utf-8'}
 
